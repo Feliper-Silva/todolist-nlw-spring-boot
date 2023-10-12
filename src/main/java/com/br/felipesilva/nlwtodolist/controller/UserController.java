@@ -1,5 +1,6 @@
 package com.br.felipesilva.nlwtodolist.controller;
 
+import at.favre.lib.crypto.bcrypt.BCrypt;
 import com.br.felipesilva.nlwtodolist.model.UserModel;
 import com.br.felipesilva.nlwtodolist.repository.IUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class UserController {
         if (user !=null){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Usuário já existe!");
         }
+        var passwordHashred = BCrypt.withDefaults()
+                .hashToString(12, userModel.getPassword().toCharArray());
+        userModel.setPassword(passwordHashred);
         var userCreated = this.userRepository.save(userModel);
         return ResponseEntity.status(HttpStatus.CREATED).body(userCreated);
     }
