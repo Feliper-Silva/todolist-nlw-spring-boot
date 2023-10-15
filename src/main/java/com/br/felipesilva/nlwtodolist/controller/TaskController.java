@@ -47,14 +47,42 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public TaskModel update (@RequestBody TaskModel taskModel, HttpServletRequest request, @PathVariable UUID id){
+    public ResponseEntity update (@RequestBody TaskModel taskModel, HttpServletRequest request, @PathVariable UUID id){
 
         var task = this.taskRepository.findById(id).orElse(null);
+        if ( task == null){
+            return  ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Tarefa não encontrada ou não existe!");
+        }
 
+        var idUser = request.getAttribute("idUser");
+        if (!task.getIdUser().equals(idUser)){
+            return  ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Usuário não tem permissão para alterar essa tarefa!");
+        }
         Util.copyNonNullProperties(taskModel, task);
 
-        var taskUpdate = this.taskRepository.save(task);
-        return taskUpdate;
+        var taskUpdated = this.taskRepository.save(task);
+        return ResponseEntity.status(HttpStatus.OK).body(taskUpdated);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity delete (HttpServletRequest request, @PathVariable UUID id){
+
+        var task = this.taskRepository.findById(id).orElse(null);
+        if ( task == null){
+            return  ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Tarefa não encontrada ou não existe!");
+        }
+
+        var idUser = request.getAttribute("idUser");
+        if (!task.getIdUser().equals(idUser)){
+            return  ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Usuário não tem permissão para alterar essa tarefa!");
+        }
+
+        this.taskRepository.deleteById(id);
+        return ResponseEntity.status(HttpStatus.OK).body("Task excluída");
     }
 
 }
